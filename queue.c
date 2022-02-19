@@ -262,11 +262,95 @@ void q_swap(struct list_head *head)
  * (e.g., by calling q_insert_head, q_insert_tail, or q_remove_head).
  * It should rearrange the existing ones.
  */
-void q_reverse(struct list_head *head) {}
+void q_reverse(struct list_head *head)
+{
+    if (!head || list_empty(head)) {
+        return;
+    }
+    struct list_head *curr = head->next;
+    struct list_head *temp = NULL;
+    while (curr != head) {
+        temp = curr->next;
+        curr->next = curr->prev;
+        curr->prev = temp;
+        curr = temp;
+    }
+    temp = head->next;
+    head->next = head->prev;
+    head->prev = temp;
+}
+
+struct list_head *merge(struct list_head *l1, struct list_head *l2)
+{
+    struct list_head *head = NULL;
+    struct list_head **indirect = &head;
+
+    while (l1 && l2) {
+        element_t *q1 = list_entry(l1, element_t, list);
+        element_t *q2 = list_entry(l2, element_t, list);
+
+        if (strcmp(q1->value, q2->value) > 0) {
+            *indirect = l2;
+            l2 = l2->next;
+        } else {
+            *indirect = l1;
+            l1 = l1->next;
+        }
+        indirect = &((*indirect)->next);
+    }
+
+    if (l1)
+        *indirect = l1;
+    if (l2)
+        *indirect = l2;
+
+    return head;
+}
+
+// Doubly-linked list (not circular)
+struct list_head *merge_sort_list(struct list_head *head)
+{
+    if (!head || !head->next)
+        return head;
+
+    struct list_head *fast = head->next;
+    struct list_head *slow = head;
+
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+
+    fast = slow->next;
+    slow->next = NULL;
+
+    struct list_head *l1 = merge_sort_list(head);
+    struct list_head *l2 = merge_sort_list(fast);
+
+    return merge(l1, l2);
+}
 
 /*
  * Sort elements of queue in ascending order
  * No effect if q is NULL or empty. In addition, if q has only one
  * element, do nothing.
  */
-void q_sort(struct list_head *head) {}
+void q_sort(struct list_head *head)
+{
+    if (!head || list_empty(head))
+        return;
+
+    head->prev->next = NULL;
+    head->next = merge_sort_list(head->next);
+
+    struct list_head *prev = head;
+    struct list_head *tmp = prev->next;
+
+    while (tmp) {
+        tmp->prev = prev;
+        tmp = tmp->next;
+        prev = prev->next;
+    }
+    prev->next = head;
+    head->prev = prev;
+}
