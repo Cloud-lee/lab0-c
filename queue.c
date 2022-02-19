@@ -58,7 +58,8 @@ bool q_insert_head(struct list_head *head, char *s)
     // allocate memory for 'value' in element_t
     new_entry->value = malloc(len);
     if (!(new_entry->value)) {
-        q_release_element(new_entry);
+        // q_release_element(new_entry);
+        free(new_entry);
         return false;
     }
     memcpy(new_entry->value, s, len);
@@ -88,7 +89,8 @@ bool q_insert_tail(struct list_head *head, char *s)
     // allocate memory for 'value' in element_t
     new_entry->value = malloc(len);
     if (!(new_entry->value)) {
-        q_release_element(new_entry);
+        // q_release_element(new_entry);
+        free(new_entry);
         return false;
     }
     memcpy(new_entry->value, s, len);
