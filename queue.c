@@ -112,6 +112,20 @@ bool q_insert_tail(struct list_head *head, char *s)
  */
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
+    if (!head || list_empty(head))
+        return NULL;
+
+    if (sp) {
+        element_t *entry = list_first_entry(head, element_t, list);
+        size_t len = strlen(entry->value);
+        len = (bufsize - 1) > len ? len : (bufsize - 1);
+        memcpy(sp, entry->value, len);
+        sp[len] = '\0';
+
+        list_del(&entry->list);
+        return entry;
+    }
+
     return NULL;
 }
 
@@ -121,6 +135,20 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
  */
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
+    if (!head || list_empty(head))
+        return NULL;
+
+    if (sp) {
+        element_t *entry = list_last_entry(head, element_t, list);
+        size_t len = strlen(entry->value);
+        len = (bufsize - 1) > len ? len : (bufsize - 1);
+        memcpy(sp, entry->value, len);
+        sp[len] = '\0';
+
+        list_del(&entry->list);
+        return entry;
+    }
+
     return NULL;
 }
 
@@ -162,6 +190,23 @@ int q_size(struct list_head *head)
 bool q_delete_mid(struct list_head *head)
 {
     // https://leetcode.com/problems/delete-the-middle-node-of-a-linked-list/
+    if (!head || list_empty(head))
+        return NULL;
+
+    struct list_head *slow;
+    struct list_head *fast = head->next;
+
+    list_for_each (slow, head) {
+        // find the middle node
+        if (fast == head || fast->next == head)
+            break;
+        fast = fast->next->next;
+    }
+    list_del(slow);
+
+    element_t *mid = list_entry(slow, element_t, list);
+    q_release_element(mid);
+
     return true;
 }
 
