@@ -17,11 +17,25 @@
  */
 struct list_head *q_new()
 {
-    return NULL;
+    struct list_head *head = malloc(sizeof(struct list_head));
+    if (!head)
+        return NULL;
+
+    INIT_LIST_HEAD(head);
+    return head;
 }
 
 /* Free all storage used by queue */
-void q_free(struct list_head *l) {}
+void q_free(struct list_head *l)
+{
+    if (!l)
+        return;
+    // iterate over the list entries and remove it
+    element_t *entry, *safe;
+    list_for_each_entry_safe (entry, safe, l, list)
+        q_release_element(entry);
+    free(l);
+}
 
 /*
  * Attempt to insert element at head of queue.
@@ -32,6 +46,23 @@ void q_free(struct list_head *l) {}
  */
 bool q_insert_head(struct list_head *head, char *s)
 {
+    if (!head)
+        return false;
+
+    // allocate memory for element_t
+    element_t *new_entry = malloc(sizeof(element_t));
+    if (!new_entry)
+        return false;
+
+    size_t len = strlen(s) + 1;
+    // allocate memory for 'value' in element_t
+    new_entry->value = malloc(len);
+    if (!(new_entry->value)) {
+        q_release_element(new_entry);
+        return false;
+    }
+    memcpy(new_entry->value, s, len);
+    list_add(&new_entry->list, head);
     return true;
 }
 
@@ -44,6 +75,24 @@ bool q_insert_head(struct list_head *head, char *s)
  */
 bool q_insert_tail(struct list_head *head, char *s)
 {
+    if (!head) {
+        return false;
+    }
+
+    // allocate memory for element_t
+    element_t *new_entry = malloc(sizeof(element_t));
+    if (!new_entry)
+        return false;
+
+    size_t len = strlen(s) + 1;
+    // allocate memory for 'value' in element_t
+    new_entry->value = malloc(len);
+    if (!(new_entry->value)) {
+        q_release_element(new_entry);
+        return false;
+    }
+    memcpy(new_entry->value, s, len);
+    list_add_tail(&new_entry->list, head);
     return true;
 }
 
@@ -91,7 +140,15 @@ void q_release_element(element_t *e)
  */
 int q_size(struct list_head *head)
 {
-    return -1;
+    if (!head)
+        return 0;
+
+    int len = 0;
+    struct list_head *li;
+
+    list_for_each (li, head)
+        len++;
+    return len;
 }
 
 /*
