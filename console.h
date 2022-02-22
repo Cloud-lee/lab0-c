@@ -65,6 +65,9 @@ void set_echo(bool on);
 /* Return true if no errors occurred */
 bool finish_cmd();
 
+/* Return true if linux sort option is enabled */
+bool is_enable_linux_sort();
+
 /*
  * Handle command processing in program that uses select as main
  * control loop.
