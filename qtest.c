@@ -1090,6 +1090,62 @@ static bool do_show(int argc, char *argv[])
     return show_queue(0);
 }
 
+/* Implement q_shuffle related functions */
+void swap_value(element_t *a, element_t *b)
+{
+    char *tmp = a->value;
+    a->value = b->value;
+    b->value = tmp;
+}
+
+/* Get the nth node from list */
+struct list_head *list_idx(struct list_head *head, int idx)
+{
+    while (idx-- >= 0) {
+        head = head->next;
+    }
+    return head;
+}
+
+void q_shuffle(struct list_head *head)
+{
+    int len = q_size(head);
+    if (len <= 1) {
+        return;
+    }
+
+    srand(time(NULL));
+    struct list_head *tail = head->prev;
+    for (int i = len; i > 1; i--) {
+        int rand_idx = rand() % i;
+        swap_value(list_entry(list_idx(head, rand_idx), element_t, list),
+                   list_entry(tail, element_t, list));
+        tail = tail->prev;
+    }
+}
+
+static bool do_shuffle(int argc, char *argv[])
+{
+    if (argc != 1) {
+        report(1, "%s takes no arguments", argv[0]);
+        return false;
+    }
+
+    if (!l_meta.l)
+        report(3, "Warning: Try to access null queue");
+    error_check();
+
+    set_noallocate_mode(true);
+    if (exception_setup(true))
+        q_shuffle(l_meta.l);
+    exception_cancel();
+
+    set_noallocate_mode(false);
+
+    show_queue(3);
+    return !error_check();
+}
+
 static void console_init()
 {
     ADD_COMMAND(new, "                | Create new queue");
@@ -1123,6 +1179,9 @@ static void console_init()
         dedup, "                | Delete all nodes that have duplicate string");
     ADD_COMMAND(swap,
                 "                | Swap every two adjacent nodes in queue");
+    ADD_COMMAND(
+        shuffle,
+        "                | Shuffle the queue using Fisher–Yates shuffle");
     add_param("length", &string_length, "Maximum length of displayed string",
               NULL);
     add_param("malloc", &fail_probability, "Malloc failure probability percent",
@@ -1218,7 +1277,6 @@ static bool sanity_check()
     }
     return true;
 }
-
 
 #define BUFSIZE 256
 int main(int argc, char *argv[])
